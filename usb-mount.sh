@@ -40,9 +40,13 @@ do_mount()
 
     # Get info for this drive: $ID_FS_LABEL and $ID_FS_TYPE
     eval $(blkid -o udev ${DEVICE} | grep -i -e "ID_FS_LABEL" -e "ID_FS_TYPE")
+    eval $(blkid -o udev ${DEVICE} | grep -i -e "ID_FS_PARTLABEL" -e "ID_FS_PARTLABEL")
 
     # Figure out a mount point to use
-    LABEL=${ID_FS_LABEL}
+    LABEL=${ID_FS_PARTLABEL}
+    if [ -z ${LABEL} ]; then
+        LABEL=${ID_FS_LABEL}
+    fi
     if grep -q " /media/${LABEL} " /etc/mtab; then
         # Already in use, make a unique one
         LABEL+="-${DEVBASE}"
@@ -74,7 +78,7 @@ do_mount()
         exit 1
     else
         # Track the mounted drives
-        echo "${MOUNT_POINT}:${DEVBASE}" | cat >> "/var/log/usb-mount.track" 
+        echo "${MOUNT_POINT}:${DEVBASE}" | cat >> "/var/log/usb-mount.track"
     fi
 
     ${log} "Mounted ${DEVICE} at ${MOUNT_POINT}"
